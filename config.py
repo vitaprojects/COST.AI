@@ -12,13 +12,13 @@ PETROL_COST_FILE = "petrol_cost.json"
 
 # Google API key
 #GOOGLE_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
-GOOGLE_API_KEY = "AIzaSyAmc3x1kHjDy8UvtI7_80Vr0bphAxm8Bl4"
+GOOGLE_API_KEY = "AIzaSyBNImj-t02PTgHdecLieLJWCooT3eC0qs8"
 if not GOOGLE_API_KEY:
     raise ValueError("Google Maps API key is missing. Check .env file.")
 
 # Configure Gemini AI
 #GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_API_KEY = "AIzaSyAmc3x1kHjDy8UvtI7_80Vr0bphAxm8Bl4"
+GEMINI_API_KEY = "AIzaSyCR0d6QqpPKKDh4G-FTXcm_kxML5GqhbtY"
 if not GEMINI_API_KEY:
     raise ValueError("Gemini API key is missing. Check .env file.")
 
