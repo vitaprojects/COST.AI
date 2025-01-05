@@ -8,7 +8,6 @@ from fastapi import HTTPException
 #from config import VEHICLE_TYPES, DELIVERY_CATEGORIES, GOOGLE_API_KEY, CurrentPetrolCostCanada
 from config import VEHICLE_TYPES, DELIVERY_CATEGORIES, GOOGLE_API_KEY, ConstCurrentPetrolCostCanada
 
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
