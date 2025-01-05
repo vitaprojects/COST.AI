@@ -48,7 +48,7 @@ app.include_router(calculate_router)
 # Root endpoint
 @app.get("/")
 def root():
-    return {"message": "Delivery Cost Calculator API"}
+    return {"message": "Delivery Cost Calculator API is running."}
 
 # Startup event
 @app.on_event("startup")
