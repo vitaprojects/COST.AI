@@ -150,11 +150,132 @@ def generate_tiers_half_km():
     tiers.append((float('inf'), constant_decrease))  # Infinite distance for the constant tier
     return tiers
 
-
 def calculate_cost(pickup_address, delivery_address, vehicle_type, delivery_category):
     """
     Calculate delivery cost dynamically for each 0.5 km interval.
+    """ 
+    logger.info(f"Calculating cost for vehicle type: {vehicle_type}")
+    
+    # Check if delivery category exists
+    if delivery_category not in DELIVERY_CATEGORIES:
+        logger.info(f"Unknown delivery category: {delivery_category}. Consulting Gemini AI.")
+        gemini_category_details = get_category_details_from_gemini(delivery_category)
+        category_modifier = gemini_category_details['modifier']
+    else:
+        category_modifier = DELIVERY_CATEGORIES[delivery_category]
+
+    # Validate vehicle type
+    if vehicle_type not in VEHICLE_TYPES:
+        logger.error(f"Invalid vehicle type: {vehicle_type}.")
+    
+    # Define minimum costs based on vehicle type
+    MINIMUM_COSTS = {
+        'Car': 6.5,
+        'Van': 13,
+        'Pickup Truck': 15.5,
+        'Tow Truck': 100,
+        'Reefers (Refrigerated Truck)': 105,
+        'Box Truck': 100,
+        'Flatbed Truck': 110
+    }
+    minimum_cost = MINIMUM_COSTS.get(vehicle_type)
+    #minimum_cost = MINIMUM_COSTS.get(vehicle_type, 6.5)  # Default to Car's minimum if not found
+
+    url = "https://maps.googleapis.com/maps/api/distancematrix/json"
+    params = {
+        "origins": pickup_address,
+        "destinations": delivery_address,
+        "key": GOOGLE_API_KEY,
+    }
+
+    try:
+        logger.info(f"Fetching distance between {pickup_address} and {delivery_address}")
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        if data["status"] != "OK":
+            logger.error(f"Google Maps API error: {data}")
+            raise HTTPException(status_code=400, detail="Error fetching distance data")
+        
+        distance_text = data["rows"][0]["elements"][0]["distance"]["text"]
+        distance_value = data["rows"][0]["elements"][0]["distance"]["value"]  # in meters
+        distance_km = distance_value / 1000  # Convert meters to kilometers
+        #distance_km = 10
+        logger.info(f"Distance calculated: {distance_km} km")
+
+        vehicle = VEHICLE_TYPES[vehicle_type]
+        base_rate = vehicle["base_rate"]
+        fuel_efficiency = vehicle["fuel_efficiency"]
+        fuel_cost_per_km = ConstCurrentPetrolCostCanada / fuel_efficiency
+        cost_per_km = (base_rate + fuel_cost_per_km) * category_modifier
+
+        tiers = generate_tiers_half_km()
+
+        remaining_distance = distance_km
+        total_cost = 0.0
+
+        for tier_distance, decrease_percentage in tiers:
+            if remaining_distance <= 0:
+                break
+
+            # Handle infinite tier for distances beyond 60 km
+            if tier_distance == float('inf'):
+                segment_distance = remaining_distance
+            else:
+                segment_distance = min(tier_distance, remaining_distance)
+
+            adjusted_cost_per_km = cost_per_km * (1 - decrease_percentage)
+            segment_cost = segment_distance * adjusted_cost_per_km
+
+            total_cost += segment_cost
+            remaining_distance -= segment_distance
+            
+            logger.info(f"Segment: {segment_distance} km, Adjusted Cost/KM: ${adjusted_cost_per_km:.4f}, "
+                        f"Segment Cost: ${segment_cost:.4f}")
+
+        # Calculate average cost per km
+        avg_cost_per_km = total_cost / distance_km if distance_km > 0 else 0
+        
+        # Apply minimum cost per km if needed
+        if avg_cost_per_km < 0.6:
+            avg_cost_per_km = 0.6
+        
+        final_cost = distance_km * avg_cost_per_km
+        
+        # Apply short distance surcharges
+        if distance_km < 4 and distance_km > 0:
+            if round(distance_km, 0) == 1:
+                final_cost += 6
+            elif round(distance_km, 0) == 2:
+                final_cost += 4.8
+            elif round(distance_km, 0) == 3:
+                final_cost += 3.6
+            elif round(distance_km, 0) == 4:
+                final_cost += 2.4
+        
+        # Apply vehicle-specific minimum cost
+        if final_cost < minimum_cost:
+            final_cost = minimum_cost
+
+        logger.info(f"Total Delivery Cost: ${final_cost} (Minimum for {vehicle_type}: ${minimum_cost})")
+
+        return {
+            "distance": distance_text,
+            "total_cost": round(final_cost, 2),  # Round to 2 decimal places for currency
+            "average_cost_per_km": round(avg_cost_per_km, 2),
+            "delivery_category_modifier": category_modifier,
+            "vehicle_type": vehicle_type,
+        }
+    except Exception as e:
+        logger.error(f"Cost calculation error: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+'''
+def calculate_cost(pickup_address, delivery_address, vehicle_type, delivery_category):
     """
+    Calculate delivery cost dynamically for each 0.5 km interval.
+    """ 
+    print('here',vehicle_type)
     # Check if delivery category exists
     if delivery_category not in DELIVERY_CATEGORIES:
         logger.info(f"Unknown delivery category: {delivery_category}. Consulting Gemini AI.")
@@ -183,11 +304,11 @@ def calculate_cost(pickup_address, delivery_address, vehicle_type, delivery_cate
         if data["status"] != "OK":
             logger.error(f"Google Maps API error: {data}")
             raise HTTPException(status_code=400, detail="Error fetching distance data")
-
+        print(data)
         distance_text = data["rows"][0]["elements"][0]["distance"]["text"]
         distance_value = data["rows"][0]["elements"][0]["distance"]["value"]  # in meters
-        distance_km = distance_value / 1000  # Convert meters to kilometers
-
+        #distance_km = distance_value / 1000  # Convert meters to kilometers
+        distance_km=10
         logger.info(f"Distance calculated: {distance_km} km")
 
         vehicle = VEHICLE_TYPES[vehicle_type]
@@ -247,3 +368,4 @@ def calculate_cost(pickup_address, delivery_address, vehicle_type, delivery_cate
         logger.error(f"Cost calculation error: {str(e)}")
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+'''

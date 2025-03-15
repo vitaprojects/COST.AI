@@ -18,7 +18,7 @@ if not GOOGLE_API_KEY:
 
 # Configure Gemini AI
 #GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_API_KEY = "AIzaSyCR0d6QqpPKKDh4G-FTXcm_kxML5GqhbtY"
+GEMINI_API_KEY = "AIzaSyBnePhEorIDkSiJUWn3mLVxXHI9hOBv-t0"
 if not GEMINI_API_KEY:
     raise ValueError("Gemini API key is missing. Check .env file.")
 
@@ -83,6 +83,16 @@ ConstCurrentPetrolCostCanada = get_petrol_cost()
 # Vehicle types with dynamically calculated base rates
 VEHICLE_TYPES = {
     "Car": {"base_rate": 0.95 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 14},
+    "Van": {"base_rate": 3.09 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 9},
+    "Pickup Truck": {"base_rate": 6.04 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 7},
+    "Tow Truck": {"base_rate": 10.16 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 5},
+    "Reefers (Refrigerated Truck)": {"base_rate": 11.35 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 4},
+    "Box Truck": {"base_rate": 11.07 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 5},
+    "Flatbed Truck": {"base_rate": 12.73 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 6},
+}
+'''
+VEHICLE_TYPES = {
+    "Car": {"base_rate": 0.95 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 14},
     "Van": {"base_rate": 1.5 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 10},
     "Pickup Truck": {"base_rate": 2.5 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 8},
     "Tow Truck": {"base_rate": 3.86 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 6},
@@ -90,6 +100,7 @@ VEHICLE_TYPES = {
     "Box Truck": {"base_rate": 6.05 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 7},
     "Flatbed Truck": {"base_rate": 5.73 * ConstCurrentPetrolCostCanada, "fuel_efficiency": 6},
 }
+'''
 
 # Delivery categories
 DELIVERY_CATEGORIES = {
